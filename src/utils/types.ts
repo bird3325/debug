@@ -1,6 +1,6 @@
 export interface PerformanceMetrics {
     lcp: number | null;
-    fid: number | null;
+    inp: number | null;
     cls: number | null;
     fcp: number | null;
     ttfb: number | null;
@@ -12,6 +12,7 @@ export interface ErrorInfo {
     line: number;
     column: number;
     timestamp: number;
+    elementSelector?: string;
 }
 
 export interface AnalysisResult {

@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { Widget } from '../components/Widget';
 import { PerformanceMonitor } from '../utils/performanceMonitor';
 import { ErrorMonitor } from '../utils/errorMonitor';
-import { PerformanceMetrics, ErrorInfo } from '../utils/types';
+import type { PerformanceMetrics, ErrorInfo } from '../utils/types';
 
 console.log('AI Web Performance Analyzer - Content Script loaded');
 
@@ -19,7 +19,7 @@ const createWidgetContainer = (): HTMLDivElement => {
 const App: React.FC = () => {
     const [metrics, setMetrics] = useState<PerformanceMetrics>({
         lcp: null,
-        fid: null,
+        inp: null,
         cls: null,
         fcp: null,
         ttfb: null
@@ -68,6 +68,19 @@ const App: React.FC = () => {
             metrics={metrics}
             errors={errors}
             onClose={() => setIsVisible(false)}
+            onReset={() => {
+                // Reset local state if needed, though metrics are driven by monitors
+                // Ideally monitors should have a reset method, but for now we can just clear the state
+                // and let new observations come in.
+                setMetrics({
+                    lcp: null,
+                    inp: null,
+                    cls: null,
+                    fcp: null,
+                    ttfb: null
+                });
+                setErrors([]);
+            }}
         />
     );
 };

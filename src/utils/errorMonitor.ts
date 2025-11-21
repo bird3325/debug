@@ -1,25 +1,40 @@
-import { ErrorInfo } from './types';
+import type { ErrorInfo } from './types';
 
 export class ErrorMonitor {
     private errors: ErrorInfo[] = [];
     private maxErrors = 50;
 
-    constructor(private onUpdate: (errors: ErrorInfo[]) => void) {
+    private onUpdate: (errors: ErrorInfo[]) => void;
+
+    constructor(onUpdate: (errors: ErrorInfo[]) => void) {
+        this.onUpdate = onUpdate;
         this.setupErrorListeners();
     }
 
     private setupErrorListeners() {
         // Capture JavaScript errors
+        // Capture JavaScript errors and Resource errors (useCapture: true)
         window.addEventListener('error', (event) => {
+            let selector: string | undefined;
+
+            // Check if it's a resource error (target is an element)
+            if (event.target && event.target instanceof HTMLElement && event.target !== (window as unknown as EventTarget)) {
+                const el = event.target as HTMLElement;
+                selector = el.tagName.toLowerCase();
+                if (el.id) selector += `#${el.id}`;
+                if (el.className && typeof el.className === 'string') selector += `.${el.className.split(' ').join('.')}`;
+            }
+
             const errorInfo: ErrorInfo = {
-                message: event.message,
-                source: event.filename || '',
+                message: event.message || 'Resource Loading Error',
+                source: event.filename || (event.target instanceof HTMLElement ? (event.target as any).src || (event.target as any).href || 'Unknown Source' : ''),
                 line: event.lineno || 0,
                 column: event.colno || 0,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                elementSelector: selector
             };
             this.addError(errorInfo);
-        });
+        }, true); // Use capture to catch resource errors
 
         // Capture unhandled promise rejections
         window.addEventListener('unhandledrejection', (event) => {

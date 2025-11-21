@@ -1,9 +1,9 @@
-import { PerformanceMetrics } from './types';
+import type { PerformanceMetrics } from './types';
 
 export class PerformanceMonitor {
     private metrics: PerformanceMetrics = {
         lcp: null,
-        fid: null,
+        inp: null,
         cls: null,
         fcp: null,
         ttfb: null
@@ -12,9 +12,12 @@ export class PerformanceMonitor {
     private clsValue = 0;
     private clsEntries: PerformanceEntry[] = [];
 
-    constructor(private onUpdate: (metrics: PerformanceMetrics) => void) {
+    private onUpdate: (metrics: PerformanceMetrics) => void;
+
+    constructor(onUpdate: (metrics: PerformanceMetrics) => void) {
+        this.onUpdate = onUpdate;
         this.observeLCP();
-        this.observeFID();
+        this.observeINP();
         this.observeCLS();
         this.observeFCP();
         this.measureTTFB();
@@ -34,18 +37,32 @@ export class PerformanceMonitor {
         }
     }
 
-    private observeFID() {
+    private observeINP() {
         try {
             const observer = new PerformanceObserver((list) => {
                 const entries = list.getEntries();
+                // INP is usually the maximum duration of all interactions
+                // But for simplicity in this monitor, we'll track the latest interaction
+                // Ideally, we should track the max duration over the page life
                 entries.forEach((entry: any) => {
-                    this.metrics.fid = entry.processingStart - entry.startTime;
-                    this.onUpdate(this.metrics);
+                    // Use duration or processingEnd - startTime
+                    // entry.duration is the most reliable for INP
+                    if (entry.interactionId) {
+                        // Simple logic: keep the max duration seen so far as a rough INP approximation
+                        // or just report the latest interaction latency.
+                        // Standard INP is the p98 of all interactions.
+                        // For this widget, let's show the max interaction latency observed.
+                        const duration = entry.duration;
+                        if (this.metrics.inp === null || duration > this.metrics.inp) {
+                            this.metrics.inp = duration;
+                            this.onUpdate(this.metrics);
+                        }
+                    }
                 });
             });
-            observer.observe({ type: 'first-input', buffered: true });
+            observer.observe({ type: 'event', buffered: true, durationThreshold: 16 } as any);
         } catch (e) {
-            console.warn('FID observation not supported');
+            console.warn('INP observation not supported');
         }
     }
 
