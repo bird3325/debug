@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "AI Web Performance Analyzer",
+  "version": "1.0.0",
+  "description": "실시간 웹사이트 성능 분석 및 AI 기반 최적화 가이드",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.tsx"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "AI Web Performance Analyzer"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
